@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUNA AI</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle, #15243c, #050b17 75%);
+  color: #dceaff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 32px;
+  letter-spacing: 8px;
+  font-weight: 300;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #8297b5;
+  font-size: 11px;
+  letter-spacing: 4px;
+}
+
+.orb {
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 30% 35%, #ffffff 0 2%, transparent 3%),
+    radial-gradient(circle at 65% 28%, #aebbd0 0 3%, transparent 4%),
+    radial-gradient(circle at 58% 65%, #aebbd0 0 5%, transparent 6%),
+    radial-gradient(circle at 35% 72%, #c2cede 0 3%, transparent 4%),
+    radial-gradient(circle at 35% 30%, #ffffff, #e9eef7 55%, #aebdd2 100%);
+
+  box-shadow:
+    0 0 35px #aebbd2,
+    0 0 75px #718baa55,
+    inset -15px -15px 35px #aebbd2;
+
+  margin: 55px auto;
+  animation: float 4s ease-in-out infinite;
+  transition: 0.4s;
+}
+
+.orb.listening {
+  animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 35px #aebbd2;
+  }
+  to {
+    transform: scale(1.09);
+    box-shadow: 0 0 70px #dceaff;
+  }
+}
+
+.status {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #9bbde5;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+button {
+  background: transparent;
+  color: #dceaff;
+  border: 1px solid #91b9e5;
+  border-radius: 30px;
+  padding: 15px 35px;
+  font-size: 13px;
+  letter-spacing: 3px;
+  cursor: pointer;
+}
+
+button:active {
+  background: #294568;
+}
+
+.result {
+  margin-top: 25px;
+  color: #aebbd0;
+  font-size: 14px;
+  text-align: center;
+  max-width: 85%;
+  min-height: 30px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 25px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #60748f;
+}
+</style>
+</head>
+
+<body>
+
+<h1>LUNA</h1>
+<div class="subtitle">PERSONAL AI SYSTEM</div>
+
+<div class="orb" id="orb"></div>
+
+<div class="status" id="status">
+SYSTEM ONLINE
+</div>
+
+<button id="activateBtn" onclick="activate()">
+ACTIVATE LUNA
+</button>
+
+<div class="result" id="result">
+Waiting for your voice...
+</div>
+
+<div class="footer">
+PERSONAL AI SYSTEM · VERSION 0.4
+</div>
+
+<script>
+let active = false;
+let recognition = null;
+
+const statusText = document.getElementById("status");
+const orb = document.getElementById("orb");
+const result = document.getElementById("result");
+const button = document.getElementById("activateBtn");
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+
+  recognition = new SpeechRecognition();
+
+  recognition.lang = "en-US";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onresult = function(event) {
+    const text =
+      event.results[event.results.length - 1][0].transcript;
+
+    result.textContent = "You said: " + text;
+  };
+
+  recognition.onend = function() {
+    if (active) {
+      try {
+        recognition.start();
+      } catch (error) {}
+    }
+  };
+
+  recognition.onerror = function(event) {
+    if (event.error === "not-allowed" ||
+        event.error === "service-not-allowed") {
+      active = false;
+      orb.classList.remove("listening");
+      statusText.textContent = "MICROPHONE ACCESS DENIED";
+      button.textContent = "ACTIVATE LUNA";
+    } else if (event.error !== "no-speech" && active) {
+      statusText.textContent = "VOICE ERROR: " + event.error;
+    }
+  };
+
+}
+
+function activate() {
+
+  if (!recognition) {
+    statusText.textContent =
+      "SPEECH RECOGNITION NOT SUPPORTED";
+    return;
+  }
+
+  if (!active) {
+
+    active = true;
+
+    statusText.textContent = "LISTENING...";
+    button.textContent = "DEACTIVATE LUNA";
+    orb.classList.add("listening");
+
+    try {
+      recognition.start();
+    } catch (error) {
+      active = false;
+      statusText.textContent = "PLEASE TRY AGAIN";
+      button.textContent = "ACTIVATE LUNA";
+      orb.classList.remove("listening");
+    }
+
+  } else {
+
+    active = false;
+
+    recognition.stop();
+
+    statusText.textContent = "SYSTEM ONLINE";
+    button.textContent = "ACTIVATE LUNA";
+    orb.classList.remove("listening");
+
+  }
+}
+</script>
+
+</body>
+</html>
